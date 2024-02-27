@@ -35,6 +35,7 @@ fn main() {
     let sort_selection = sort_selection.trim().to_lowercase().replace(" ", "_");
 
     // sorting based on input
+    // TODO be able to choose between asc/desc sort
     cubes.sort_by(|a, b| match sort_selection.as_str() {
         "make" => a.make.cmp(&b.make),
         "model" => a.model.cmp(&b.model),
