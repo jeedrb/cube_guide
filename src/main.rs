@@ -1,4 +1,4 @@
-use mysql::*;
+// use mysql::*;
 use mysql::prelude::*;
 use std::io;
 use std::cmp::Ordering;
@@ -27,9 +27,9 @@ fn main() {
     ).unwrap();
 
     // creating string vectors to put later dump into hashmaps for valid options
-    let mut valid_dir_asc_vec: Vec<&str> = vec!["a", "asc", "ascend", "ascending"];
-    let mut valid_dir_desc_vec: Vec<&str> = vec!["d", "desc", "descend", "descending"];
-    let mut valid_sorts_vec: Vec<&str> = vec!["make", "model", "price", "magnets", "magnetic_core"];
+    let valid_dir_asc_vec: Vec<&str> = vec!["a", "asc", "ascend", "ascending"];
+    let valid_dir_desc_vec: Vec<&str> = vec!["d", "desc", "descend", "descending"];
+    let valid_sorts_vec: Vec<&str> = vec!["make", "model", "price", "magnets", "magnetic_core"];
 
     // creating hashmaps and dumping the vector data into them
     let mut valid_dir_asc = HashMap::new();
@@ -48,36 +48,68 @@ fn main() {
     }
 
     // getting input on how to sort the results
-    let mut sort_selection = String::new();
-    io::stdin()
-        .read_line(&mut sort_selection)
-        .expect("input error");
-    
-    let mut sort_direction = String::new();
-    io::stdin()
-        .read_line(&mut sort_direction)
-        .expect("input error");
+    // TODO make literally everything after this point loop so it can keep querying
+    // maybe make entering "exit" at any point make it immediately close
 
-    // first trims edge whitespace, then makes it all lowercase, then converts the remaining spaces to underscores
-    let sort_selection = sort_selection.trim().to_lowercase().replace(" ", "_");
-    let sort_direction = sort_direction.trim().to_lowercase().replace(" ", "_");
+    println!("Enter a valid sorting method:");
+    let mut sort_selection = String::new();
+    loop {
+        sort_selection.clear();
+        io::stdin()
+            .read_line(&mut sort_selection)
+            .expect("input error");
+        sort_selection = sort_selection.trim().to_lowercase().replace(" ", "_");
+        if valid_sorts.contains_key(sort_selection.as_str()) {
+            break;
+        } else {
+            println!("whoops! not a valid sort, such as \"make\" or \"model\", try again! ");
+        }
+    }
+
+    println!("Enter a valid sorting direction:");
+    let mut sort_direction = String::new();
+    let mut sort_reverse = false;
+    loop {
+        sort_direction.clear();
+        io::stdin()
+            .read_line(&mut sort_direction)
+            .expect("input error");
+        sort_direction = sort_direction.trim().to_lowercase().replace(" ", "_");
+        if valid_dir_asc.contains_key(sort_direction.as_str()) {
+            break;
+        } else if valid_dir_desc.contains_key(sort_direction.as_str()) {
+            sort_reverse = true;
+            break;
+        } else {
+            println!("whoops! not a valid direction, such as \"asc\" or \"desc\", try again! ");
+        }
+    }
 
     // sorting based on input
+
     cubes.sort_by(|a, b| match sort_selection.as_str() {
         "make" => a.make.cmp(&b.make),
         "model" => a.model.cmp(&b.model),
         "price" => a.price.partial_cmp(&b.price).unwrap_or(Ordering::Equal),
         "magnets" => a.magnets.cmp(&b.magnets),
         "magnetic_core" => a.magnetic_core.cmp(&b.magnetic_core),
-        // "magnetic core" => a.magnetic_core.cmp(&b.magnetic_core),
         _ => panic!("Invalid field: {}", sort_selection),
     });
 
     
-
+    // printing time!!!
+    
     let mut counter: i32 = 0;
-    for x in cubes.iter().rev() { // actually implement selecting an order lol
-        counter += 1;
-        println!("{counter} {} {}", x.make, x.model);
+    if sort_reverse {
+        for x in cubes.iter().rev() { 
+            counter += 1;
+            println!("{counter} {} {}", x.make, x.model);
+        }
+    } else {
+        for x in cubes { 
+            counter += 1;
+            println!("{counter} {} {}", x.make, x.model);
+        }
     }
+
 }
