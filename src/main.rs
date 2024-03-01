@@ -13,42 +13,48 @@ struct Cube {
     description: String,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    // connecting to DB
+
     let url = "mysql://root:$w@g69$w@g69@localhost:3306/cubing";
-    let pool = mysql::Pool::new(url).unwrap();
+    let pool = mysql::Pool::new(url)?;
+    let mut conn = pool.get_conn()?;
 
-    let mut conn = pool.get_conn().unwrap();
-
+    // mapping sql data to struct vector
+    
     let mut cubes: Vec<Cube> = conn.query_map(
         "SELECT make, model, price, magnets, magnetic_core, description FROM cubes",
         |(make, model, price, magnets, magnetic_core, description)| {
             Cube {make, model, price, magnets, magnetic_core, description}
         },
-    ).unwrap();
+    )?;
 
-    // creating string vectors to put later dump into hashmaps for valid options
-    let valid_dir_asc_vec: Vec<&str> = vec!["a", "asc", "ascend", "ascending"];
-    let valid_dir_desc_vec: Vec<&str> = vec!["d", "desc", "descend", "descending"];
+    // creating string vectors to later dump into hashmaps for valid options
+
+    let valid_dir_asc_vec: Vec<&str> = vec!["a", "asc", "ascend", "ascending", "u", "up"];
+    let valid_dir_desc_vec: Vec<&str> = vec!["d", "desc", "descend", "descending", "down"];
     let valid_sorts_vec: Vec<&str> = vec!["make", "model", "price", "magnets", "magnetic_core"];
 
     // creating hashmaps and dumping the vector data into them
+
     let mut valid_dir_asc = HashMap::new();
-    for &i in &valid_dir_asc_vec {
+    for i in valid_dir_asc_vec {
         valid_dir_asc.insert(i, i);
     }
 
     let mut valid_dir_desc = HashMap::new();
-    for &i in &valid_dir_desc_vec {
+    for i in valid_dir_desc_vec {
         valid_dir_desc.insert(i, i);
     }
 
     let mut valid_sorts = HashMap::new();
-    for &i in &valid_sorts_vec {
+    for i in valid_sorts_vec {
         valid_sorts.insert(i, i);
     }
 
     // getting input on how to sort the results
-    // TODO make literally everything after this point loop so it can keep querying
+    // TODO make literally everything after this point loop so it can keep querying 
     // maybe make entering "exit" at any point make it immediately close
 
     println!("Enter a valid sorting method:");
@@ -57,12 +63,12 @@ fn main() {
         sort_selection.clear();
         io::stdin()
             .read_line(&mut sort_selection)
-            .expect("input error");
+            .expect("Input error");
         sort_selection = sort_selection.trim().to_lowercase().replace(" ", "_");
         if valid_sorts.contains_key(sort_selection.as_str()) {
             break;
         } else {
-            println!("whoops! not a valid sort, such as \"make\" or \"model\", try again! ");
+            println!("Whoops! \"{sort_selection}\" is not a valid sort, such as \"make\" or \"model\". Try again! ");
         }
     }
 
@@ -73,7 +79,7 @@ fn main() {
         sort_direction.clear();
         io::stdin()
             .read_line(&mut sort_direction)
-            .expect("input error");
+            .expect("Input error");
         sort_direction = sort_direction.trim().to_lowercase().replace(" ", "_");
         if valid_dir_asc.contains_key(sort_direction.as_str()) {
             break;
@@ -81,7 +87,7 @@ fn main() {
             sort_reverse = true;
             break;
         } else {
-            println!("whoops! not a valid direction, such as \"asc\" or \"desc\", try again! ");
+            println!("Whoops! \"{sort_direction}\" is not a valid direction, such as \"asc\" or \"desc\". Try again! ");
         }
     }
 
@@ -93,10 +99,10 @@ fn main() {
         "price" => a.price.partial_cmp(&b.price).unwrap_or(Ordering::Equal),
         "magnets" => a.magnets.cmp(&b.magnets),
         "magnetic_core" => a.magnetic_core.cmp(&b.magnetic_core),
-        _ => panic!("Invalid field: {}", sort_selection),
+        "description" => a.description.cmp(&b.description), // this will never be used, just want to get rid of a warning in the struct
+        _ => panic!("Invalid field: {}", sort_selection), // this will also never be used, as the selections are validated way earlier
     });
 
-    
     // printing time!!!
     
     let mut counter: i32 = 0;
@@ -112,4 +118,5 @@ fn main() {
         }
     }
 
+    Ok(())
 }
