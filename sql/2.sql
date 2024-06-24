@@ -1,4 +1,4 @@
-INSERT INTO cubes (make, model, price, magnets, magnetic_core, description)
+INSERT INTO 3x3 (make, model, price, magnets, magnetic_core, description) 
 VALUES
 ('Gan', '12 MagLev UV', '58.99', '3', '4', 'the cube of choice for many top solvers'),
 ('MoYu', 'Super WeiLong', '89.99', '3', '3', 'a great cube reminiscent of both the original weilong and a gan 11'),
